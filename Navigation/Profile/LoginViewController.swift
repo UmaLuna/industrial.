@@ -6,28 +6,28 @@
 import UIKit
 
 final class LoginViewController: UIViewController {
-    
+
     // MARK: Visual content
-    
+
     var loginScrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
-    
+
     var contentView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-    
+
     var vkLogo: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "vkLogo")
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
-    
+
     var loginStackView: UIStackView = {
         let stack = UIStackView()
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -40,18 +40,17 @@ final class LoginViewController: UIViewController {
         stack.clipsToBounds = true
         return stack
     }()
-    
+
     var loginButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        
+
         if let pixel = UIImage(named: "blue_pixel") {
             button.setBackgroundImage(pixel.image(alpha: 1), for: .normal)
             button.setBackgroundImage(pixel.image(alpha: 0.8), for: .selected)
             button.setBackgroundImage(pixel.image(alpha: 0.6), for: .highlighted)
             button.setBackgroundImage(pixel.image(alpha: 0.4), for: .disabled)
         }
-
         button.setTitle("Login", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(nil, action: #selector(touchLoginButton), for: .touchUpInside)
@@ -59,7 +58,7 @@ final class LoginViewController: UIViewController {
         button.clipsToBounds = true
         return button
     }()
-    
+
     var loginField: UITextField = {
         let login = UITextField()
         login.translatesAutoresizingMaskIntoConstraints = false
@@ -75,7 +74,7 @@ final class LoginViewController: UIViewController {
         login.returnKeyType = .done
         return login
     }()
-    
+
     var passwordField: UITextField = {
         let password = UITextField()
         password.translatesAutoresizingMaskIntoConstraints = false
@@ -91,36 +90,55 @@ final class LoginViewController: UIViewController {
         password.returnKeyType = .done
         return password
     }()
-    
+
+    private var userService: UserService
+
+    init() {
+        #if DEBUG
+        self.userService = TestUserService()
+        #else
+        let user = User(
+            login: "real_user",
+            fullName: "Real User",
+            avatar: UIImage(named: "teo") ?? UIImage(),
+            status: "Online"
+            )
+
+        self.userService = CurrentUserService(currentUser: user)
+        #endif
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     // MARK: - Setup section
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         view.backgroundColor = .systemBackground
         navigationController?.navigationBar.isHidden = true
-        
+
         setupViews()
     }
-    
-    private func setupViews() {
-        view.addSubview(loginScrollView)
+
+    private func setupViews() {view.addSubview(loginScrollView)
         loginScrollView.addSubview(contentView)
-        
         contentView.addSubviews(vkLogo, loginStackView, loginButton)
-        
+
         loginStackView.addArrangedSubview(loginField)
         loginStackView.addArrangedSubview(passwordField)
-        
+
         loginField.delegate = self
         passwordField.delegate = self
-        
+
         setupConstraints()
     }
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-
             loginScrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             loginScrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             loginScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -149,13 +167,12 @@ final class LoginViewController: UIViewController {
             loginButton.heightAnchor.constraint(equalToConstant: 50),
         ])
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let nc = NotificationCenter.default
         nc.addObserver(self, selector: #selector(keyboardShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         nc.addObserver(self, selector: #selector(keyboardHide), name: UIResponder.keyboardWillHideNotification, object: nil)
-
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -163,14 +180,27 @@ final class LoginViewController: UIViewController {
         let nc = NotificationCenter.default
         nc.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         nc.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-
     }
-    
-    // MARK: - Event handlers
 
     @objc private func touchLoginButton() {
-        let profileVC = ProfileViewController()
-        navigationController?.setViewControllers([profileVC], animated: true)
+        guard let loginText = loginField.text, !loginText.isEmpty else {
+            showAlert(message: "Введите логин")
+            return
+        }
+
+        if let user = userService.getUser(login: loginText) {
+            let profileVC = ProfileViewController()
+            profileVC.user = user
+            navigationController?.setViewControllers([profileVC], animated: true)
+        } else {
+            showAlert(message: "Неверный логин")
+        }
+    }
+
+    private func showAlert(message: String) {
+        let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "ОК", style: .default))
+        present(alert, animated: true)
     }
 
     @objc private func keyboardShow(notification: NSNotification) {
@@ -188,8 +218,6 @@ final class LoginViewController: UIViewController {
 // MARK: - Extension
 
 extension LoginViewController: UITextFieldDelegate {
-    
-    // tap 'done' on the keyboard
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true

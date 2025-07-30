@@ -37,7 +37,13 @@ final class ProfileHeaderView: UITableViewHeaderFooterView {
     required init?(coder: NSCoder) {
         fatalError("lol")
     }
-    
+
+    func configure(with user: User) {
+        fullNameLabel.text = user.fullName
+        statusLabel.text = user.status
+        avatarImageView.image = user.avatar
+    }
+
     private func setupNameLabel() {
         fullNameLabel.translatesAutoresizingMaskIntoConstraints = false
         fullNameLabel.text = "Teo West"

@@ -10,7 +10,9 @@ final class ProfileViewController: UIViewController {
     static let headerIdent = "header"
     static let photoIdent = "photo"
     static let postIdent = "post"
-    
+
+    var user: User?
+
     static var postTableView: UITableView = {
         let table = UITableView(frame: .zero, style: .grouped)
         table.translatesAutoresizingMaskIntoConstraints = false
@@ -89,6 +91,10 @@ extension ProfileViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard section == 0 else { return nil }
         let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: Self.headerIdent) as! ProfileHeaderView
+
+        if let user = user {
+            headerView.configure(with:user)
+        }
         return headerView
     }
 
