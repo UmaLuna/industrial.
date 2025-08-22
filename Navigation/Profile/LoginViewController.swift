@@ -7,7 +7,7 @@ import UIKit
 
 final class LoginViewController: UIViewController {
 
-    // MARK: Visual content
+    // MARK: - UI
 
     var loginScrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -91,7 +91,12 @@ final class LoginViewController: UIViewController {
         return password
     }()
 
+    // MARK: - Services
+
     private var userService: UserService
+    var loginDelegate: LoginViewControllerDelegate?   // делегат
+
+    // MARK: - Init
 
     init() {
         #if DEBUG
@@ -102,8 +107,7 @@ final class LoginViewController: UIViewController {
             fullName: "Real User",
             avatar: UIImage(named: "teo") ?? UIImage(),
             status: "Online"
-            )
-
+        )
         self.userService = CurrentUserService(currentUser: user)
         #endif
         super.init(nibName: nil, bundle: nil)
@@ -113,7 +117,7 @@ final class LoginViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Setup section
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -124,7 +128,8 @@ final class LoginViewController: UIViewController {
         setupViews()
     }
 
-    private func setupViews() {view.addSubview(loginScrollView)
+    private func setupViews() {
+        view.addSubview(loginScrollView)
         loginScrollView.addSubview(contentView)
         contentView.addSubviews(vkLogo, loginStackView, loginButton)
 
@@ -168,32 +173,24 @@ final class LoginViewController: UIViewController {
         ])
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        let nc = NotificationCenter.default
-        nc.addObserver(self, selector: #selector(keyboardShow), name: UIResponder.keyboardWillShowNotification, object: nil)
-        nc.addObserver(self, selector: #selector(keyboardHide), name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
-
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        let nc = NotificationCenter.default
-        nc.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-        nc.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
+    // MARK: - Actions
 
     @objc private func touchLoginButton() {
-        guard let loginText = loginField.text, !loginText.isEmpty else {
-            showAlert(message: "Введите логин")
+        guard let loginText = loginField.text, !loginText.isEmpty,
+              let passwordText = passwordField.text, !passwordText.isEmpty else {
+            showAlert(message: "Введите логин и пароль")
             return
         }
 
-        if let user = userService.getUser(login: loginText) {
-            let profileVC = ProfileViewController()
-            profileVC.user = user
-            navigationController?.setViewControllers([profileVC], animated: true)
+        // Проверка через делегат → LoginInspector → Checker
+        if loginDelegate?.check(login: loginText, password: passwordText) == true {
+            if let user = userService.getUser(login: loginText) {
+                let profileVC = ProfileViewController()
+                profileVC.user = user
+                navigationController?.setViewControllers([profileVC], animated: true)
+            }
         } else {
-            showAlert(message: "Неверный логин")
+            showAlert(message: "Неверный логин или пароль")
         }
     }
 
@@ -215,7 +212,7 @@ final class LoginViewController: UIViewController {
     }
 }
 
-// MARK: - Extension
+// MARK: - UITextFieldDelegate
 
 extension LoginViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
