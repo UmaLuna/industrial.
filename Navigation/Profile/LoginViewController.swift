@@ -72,6 +72,9 @@ final class LoginViewController: UIViewController {
         login.font = UIFont.systemFont(ofSize: 16)
         login.autocapitalizationType = .none
         login.returnKeyType = .done
+
+        // логин
+        login.text = "admin"
         return login
     }()
 
@@ -88,6 +91,9 @@ final class LoginViewController: UIViewController {
         password.font = UIFont.systemFont(ofSize: 16)
         password.autocapitalizationType = .none
         password.returnKeyType = .done
+
+        // пароль
+        password.text = "1234"
         return password
     }()
 
@@ -103,8 +109,8 @@ final class LoginViewController: UIViewController {
         self.userService = TestUserService()
         #else
         let user = User(
-            login: "real_user",
-            fullName: "Real User",
+            login: "admin",
+            fullName: "Admin",
             avatar: UIImage(named: "teo") ?? UIImage(),
             status: "Online"
         )
@@ -220,3 +226,4 @@ extension LoginViewController: UITextFieldDelegate {
         return true
     }
 }
+
