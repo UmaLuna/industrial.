@@ -44,12 +44,6 @@ class PhotosViewController: UIViewController {
 
         // фасад
         imagePublisherFacade = ImagePublisherFacade()
-
-        // подписка на изменения
-        imagePublisherFacade?.subscribe(self)
-
-        // добавление картинок с задержкой
-        imagePublisherFacade?.addImagesWithTimer(time: 0.5, repeat: 15)
     }
 
     private func setupConstraints() {
@@ -64,6 +58,12 @@ class PhotosViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.isHidden = false
+
+        // подписка на изменения
+        imagePublisherFacade?.subscribe(self)
+
+        // добавление картинок с задержкой
+        imagePublisherFacade?.addImagesWithTimer(time: 0.5, repeat: 15)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -83,9 +83,7 @@ class PhotosViewController: UIViewController {
 extension PhotosViewController: ImageLibrarySubscriber {
     func receive(images: [UIImage]) {
         self.images = images
-        DispatchQueue.main.async {
-            self.photosCollectionView.reloadData()
-        }
+        self.photosCollectionView.reloadData()
     }
 }
 
@@ -101,7 +99,7 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 
 extension PhotosViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return images.count  
+        return images.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
