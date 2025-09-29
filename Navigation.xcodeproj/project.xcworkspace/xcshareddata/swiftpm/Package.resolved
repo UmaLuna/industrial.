@@ -1,22 +1,13 @@
 {
-  "originHash" : "688d834f35c2fbcbc411b959c08471c9a97fb052546075725bca39b9e2884be2",
+  "originHash" : "a7f8d3303ab7f12df4865aef063e34efc308a2e28e4b25fd238406a23e78c60d",
   "pins" : [
     {
       "identity" : "iosintpackage",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/TrueMax/iOSIntPackage",
       "state" : {
-        "revision" : "78a55cb525e18e6bb05886bd5572cfa67ee7b47e",
-        "version" : "2.2.0"
-      }
-    },
-    {
-      "identity" : "snapkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SnapKit/SnapKit.git",
-      "state" : {
-        "revision" : "2842e6e84e82eb9a8dac0100ca90d9444b0307f4",
-        "version" : "5.7.1"
+        "branch" : "imagepublisher",
+        "revision" : "e1cc0e1b76d7cb8f770d903d85ae9ed91ae026bd"
       }
     }
   ],

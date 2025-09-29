@@ -4,13 +4,17 @@
 //
 
 import UIKit
+import iOSIntPackage
 
 class PhotosViewController: UIViewController {
-    
+
     let photoIdent = "photoCell"
 
+    // MARK: Data
+    private var images: [UIImage] = []
+    private var imagePublisherFacade: ImagePublisherFacade? // фасад
+
     // MARK: Visual objects
-    
     lazy var layout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 8
@@ -27,19 +31,21 @@ class PhotosViewController: UIViewController {
         photos.register(PhotosCollectionViewCell.self, forCellWithReuseIdentifier: photoIdent)
         return photos
     }()
-    
+
     // MARK: - Setup section
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         self.title = "Photo Gallery"
         self.view.addSubview(photosCollectionView)
         self.photosCollectionView.dataSource = self
         self.photosCollectionView.delegate = self
         setupConstraints()
+
+        // фасад
+        imagePublisherFacade = ImagePublisherFacade()
     }
-    
+
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             photosCollectionView.topAnchor.constraint(equalTo: self.view.topAnchor),
@@ -52,18 +58,37 @@ class PhotosViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.isHidden = false
+
+        // подписка на изменения
+        imagePublisherFacade?.subscribe(self)
+
+        // добавление картинок с задержкой
+        imagePublisherFacade?.addImagesWithTimer(time: 0.5, repeat: 15)
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.navigationBar.isHidden = true
+
+        // отписка
+        imagePublisherFacade?.removeSubscription(for: self)
+    }
+
+    deinit {
+        imagePublisherFacade?.removeSubscription(for: self)
     }
 }
 
-// MARK: - Extensions
+// MARK: - Observer (ImageLibrarySubscriber)
+extension PhotosViewController: ImageLibrarySubscriber {
+    func receive(images: [UIImage]) {
+        self.images = images
+        self.photosCollectionView.reloadData()
+    }
+}
 
+// MARK: - Extensions for CollectionView
 extension PhotosViewController: UICollectionViewDelegateFlowLayout {
-
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let countItem: CGFloat = 2
         let accessibleWidth = collectionView.frame.width - 32
@@ -73,15 +98,15 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 }
 
 extension PhotosViewController: UICollectionViewDataSource {
-
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return Photos.shared.examples.count
+        return images.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: photoIdent, for: indexPath) as? PhotosCollectionViewCell else { return UICollectionViewCell()}
-        cell.configCellCollection(photo: Photos.shared.examples[indexPath.item])
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: photoIdent, for: indexPath) as? PhotosCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+        cell.configCellCollection(photo: images[indexPath.item])
         return cell
     }
 }
-
